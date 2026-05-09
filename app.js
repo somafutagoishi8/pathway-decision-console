@@ -545,18 +545,25 @@ function setProfileStatus(msg) {
 }
 
 function updateTableState() {
-  const badge  = document.getElementById('table-state-badge');
-  const notice = document.getElementById('table-state-notice');
+  const badge       = document.getElementById('table-state-badge');
+  const notice      = document.getElementById('table-state-notice');
+  const tableScroll = document.querySelector('.table-scroll');
+  const emptyState  = document.getElementById('table-empty-state');
+
   if (analysisRan) {
-    badge.textContent = 'Profile-adjusted';
-    badge.className   = 'tbl-badge tbl-badge-adjusted';
-    notice.textContent = 'Personalized comparison updated from your profile inputs using simple rule-based logic.';
-    notice.className   = 'table-state-notice notice-adjusted';
+    badge.textContent      = 'Profile-adjusted';
+    badge.className        = 'tbl-badge tbl-badge-adjusted';
+    notice.textContent     = 'Personalized comparison updated from your profile inputs using simple rule-based logic.';
+    notice.className       = 'table-state-notice notice-adjusted';
+    notice.style.display   = '';
+    tableScroll.style.display = '';
+    emptyState.style.display  = 'none';
   } else {
-    badge.textContent = 'Baseline';
-    badge.className   = 'tbl-badge tbl-badge-baseline';
-    notice.textContent = 'Sample baseline comparison — fill out your profile and click Analyze My Pathways to personalize these scores.';
-    notice.className   = 'table-state-notice notice-baseline';
+    badge.textContent      = 'Not generated';
+    badge.className        = 'tbl-badge tbl-badge-baseline';
+    notice.style.display   = 'none';
+    tableScroll.style.display = 'none';
+    emptyState.style.display  = '';
   }
 }
 
@@ -614,6 +621,7 @@ function exportSummary() {
     ...PRIORITIES.map(p => `  ${p.label.padEnd(26)} ${p.value}/10`),
     '',
     '='.repeat(52),
+    `PATHWAY COMPARISON: ${analysisRan ? 'Profile-adjusted' : 'Not generated yet'}`,
     `SELECTED ROUTE: ${route ? route.flag + ' ' + route.name : '(none selected)'}`,
   ];
 

@@ -101,10 +101,15 @@
 
     <!-- Pathway Comparison Table -->
     <section class="card" id="section-table">
-      <h2>Pathway Comparison <span id="table-state-badge" class="tbl-badge tbl-badge-baseline">Baseline</span></h2>
-      <p class="card-note">Click any row to open the full route analysis below. The <strong>Overall</strong> column is a weighted average calculated from your priority sliders — drag a slider to watch the table re-sort live. <strong>Before analysis, route scores are generic sample scores.</strong></p>
-      <p id="table-state-notice" class="table-state-notice notice-baseline">Sample baseline comparison — fill out your profile and click Analyze My Pathways to personalize these scores.</p>
-      <div class="table-scroll">
+      <h2>Pathway Comparison <span id="table-state-badge" class="tbl-badge tbl-badge-baseline">Not generated</span></h2>
+      <p class="card-note">Click any row to open the full route analysis below. The <strong>Overall</strong> column is a weighted average calculated from your priority sliders — drag a slider to watch the table re-sort live.</p>
+      <p id="table-state-notice" class="table-state-notice notice-adjusted" style="display:none"></p>
+      <div id="table-empty-state" class="table-empty-state">
+        <p class="empty-heading">No comparison yet</p>
+        <p>Fill out your Student Profile and click Analyze My Pathways to generate a pathway comparison.</p>
+        <p class="empty-mvp-note">This MVP uses simple rule-based logic, not AI.</p>
+      </div>
+      <div class="table-scroll" style="display:none">
         <table id="pathway-table">
           <thead>
             <tr>
@@ -131,7 +136,7 @@
         <span id="selected-badge" class="route-badge hidden"></span>
       </div>
       <div id="explanation-body" class="explanation-empty">
-        <p>Click a row in the Pathway Comparison table to see the full analysis here.</p>
+        <p>Analyze your profile first, then click a route to see the full analysis.</p>
       </div>
     </section>
 
