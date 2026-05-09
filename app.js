@@ -431,6 +431,7 @@ function analyzePathways() {
   if (isEmpty) {
     analysisRan = false;
     setProfileStatus('Add more profile details for a more tailored comparison.');
+    updateTableState();
     renderTable();
     if (selectedId) renderExplanation(selectedId);
     return;
@@ -534,12 +535,29 @@ function analyzePathways() {
 
   analysisRan = true;
   setProfileStatus('Analysis updated based on your profile inputs.');
+  updateTableState();
   renderTable();
   if (selectedId) renderExplanation(selectedId);
 }
 
 function setProfileStatus(msg) {
   document.getElementById('profile-status').textContent = msg;
+}
+
+function updateTableState() {
+  const badge  = document.getElementById('table-state-badge');
+  const notice = document.getElementById('table-state-notice');
+  if (analysisRan) {
+    badge.textContent = 'Profile-adjusted';
+    badge.className   = 'tbl-badge tbl-badge-adjusted';
+    notice.textContent = 'Personalized comparison updated from your profile inputs using simple rule-based logic.';
+    notice.className   = 'table-state-notice notice-adjusted';
+  } else {
+    badge.textContent = 'Baseline';
+    badge.className   = 'tbl-badge tbl-badge-baseline';
+    notice.textContent = 'Sample baseline comparison — fill out your profile and click Analyze My Pathways to personalize these scores.';
+    notice.className   = 'table-state-notice notice-baseline';
+  }
 }
 
 /* ── Decision Log ──────────────────────────────────────────────────── */
@@ -717,3 +735,4 @@ function setFbStatus(msg) {
 renderPriorities();
 renderTable();
 renderTimeline();
+updateTableState();

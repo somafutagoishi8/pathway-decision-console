@@ -541,6 +541,47 @@ footer {
   min-width: 120px;
 }
 
+/* ── Table state badge & notice ─────────────────────── */
+.tbl-badge {
+  padding: .18rem .55rem;
+  border-radius: 99px;
+  font-size: .63rem;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.tbl-badge-baseline {
+  background: var(--amber-faint);
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+.tbl-badge-adjusted {
+  background: var(--green-faint);
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+}
+
+.table-state-notice {
+  font-size: .78rem;
+  padding: .55rem .85rem;
+  border-radius: var(--r-s);
+  line-height: 1.5;
+  border: 1px solid;
+}
+.table-state-notice.notice-baseline {
+  background: var(--amber-faint);
+  color: #92400E;
+  border-color: #FDE68A;
+}
+.table-state-notice.notice-adjusted {
+  background: var(--green-faint);
+  color: #065F46;
+  border-color: #6EE7B7;
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 820px) {
   .grid-2            { grid-template-columns: 1fr; }
