@@ -437,7 +437,7 @@ function analyzePathways() {
   }
 
   const ctokens   = countries.split(/[\s,\/\-\.]+/).filter(Boolean);
-  const inCountry = (term) => ctokens.some(t => t === term) || countries.includes(term);
+  const inCountry = (term) => ctokens.some(t => t === term);
 
   const isCS           = /computer science|data science|\bcs\b|artificial intelligence|\bai\b|engineering|software/.test(majors);
   const isBusiness     = /business|commerce|economics|finance|management|analytics/.test(majors);
