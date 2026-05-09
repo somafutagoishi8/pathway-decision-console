@@ -350,9 +350,10 @@ tbody tr.selected td:first-child .route-name::before {
   padding: 1rem 1.1rem;
   border-left: 3px solid var(--blue);
 }
-.exp-block.warn  { border-color: var(--amber); }
-.exp-block.risk  { border-color: var(--red); }
-.exp-block.next  { border-color: var(--green); }
+.exp-block.warn         { border-color: var(--amber); }
+.exp-block.risk         { border-color: var(--red); }
+.exp-block.next         { border-color: var(--green); }
+.exp-block.profile-note { border-color: #0EA5E9; margin-top: .75rem; }
 .exp-block h3 {
   font-size: .67rem;
   font-weight: 800;
@@ -469,6 +470,18 @@ tbody tr.selected td:first-child .route-name::before {
 .tl-month { font-size: .7rem; color: var(--text-4); margin-top: .1rem; }
 
 /* ── Decision log buttons ───────────────────────────── */
+.analyze-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: 1.2rem;
+  flex-wrap: wrap;
+}
+.analyze-note {
+  font-size: .72rem;
+  color: var(--text-4);
+}
+
 .log-actions {
   display: flex;
   gap: .75rem;

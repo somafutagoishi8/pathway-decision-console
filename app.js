@@ -260,7 +260,10 @@ const TIMELINES = {
 };
 
 /* ── State ─────────────────────────────────────────────────────────── */
-let selectedId = null;
+let selectedId     = null;
+let adjustedScores = {};
+let analysisNotes  = {};
+let analysisRan    = false;
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
 function chipClass(n) {
@@ -269,11 +272,18 @@ function chipClass(n) {
   return 'chip-lo';
 }
 
+function clamp(v, lo = 1, hi = 10) { return Math.max(lo, Math.min(hi, v)); }
+
+function effectiveScores(pathway) {
+  return adjustedScores[pathway.id] || pathway.scores;
+}
+
 function computeOverall(pathway) {
   let wSum = 0, wScore = 0;
+  const scores = effectiveScores(pathway);
   PRIORITIES.forEach(p => {
     wSum   += p.value;
-    wScore += pathway.scores[p.key] * p.value;
+    wScore += scores[p.key] * p.value;
   });
   return (wScore / wSum).toFixed(1);
 }
@@ -316,13 +326,14 @@ function renderTable() {
   );
 
   document.getElementById('pathway-tbody').innerHTML = sorted.map(p => {
-    const ov = computeOverall(p);
+    const ov  = computeOverall(p);
+    const sc  = effectiveScores(p);
     const sel = p.id === selectedId ? 'selected' : '';
     return `
       <tr class="${sel}" onclick="selectRoute('${p.id}')">
         <td><span class="route-name">${p.flag} ${p.name}</span></td>
         ${keys.map(k => `
-          <td><span class="chip ${chipClass(p.scores[k])}">${p.scores[k]}</span></td>
+          <td><span class="chip ${chipClass(sc[k])}">${sc[k]}</span></td>
         `).join('')}
         <td><span class="risk ${p.riskClass}">${p.risk}</span></td>
         <td><span class="overall" style="color:${overallColor(ov)}">${ov}</span></td>
@@ -340,25 +351,32 @@ function renderExplanation(id) {
   badge.textContent = `${p.flag} ${p.name}`;
   badge.classList.remove('hidden');
 
+  const profileNote = analysisRan && analysisNotes[id]
+    ? `<div class="exp-block profile-note"><h3>Profile-Based Note</h3><p class="exp-next-text">${analysisNotes[id]}</p></div>`
+    : '';
+
   const body = document.getElementById('explanation-body');
-  body.className = 'explanation-grid';
+  body.className = '';
   body.innerHTML = `
-    <div class="exp-block">
-      <h3>Why This Route Fits</h3>
-      <ul>${p.detail.fit.map(t => `<li>${t}</li>`).join('')}</ul>
+    <div class="explanation-grid">
+      <div class="exp-block">
+        <h3>Why This Route Fits</h3>
+        <ul>${p.detail.fit.map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div class="exp-block warn">
+        <h3>Main Trade-offs</h3>
+        <ul>${p.detail.tradeoffs.map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div class="exp-block risk">
+        <h3>Risks to Check</h3>
+        <ul>${p.detail.risks.map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div class="exp-block next">
+        <h3>Best Next Action</h3>
+        <p class="exp-next-text">${p.detail.next}</p>
+      </div>
     </div>
-    <div class="exp-block warn">
-      <h3>Main Trade-offs</h3>
-      <ul>${p.detail.tradeoffs.map(t => `<li>${t}</li>`).join('')}</ul>
-    </div>
-    <div class="exp-block risk">
-      <h3>Risks to Check</h3>
-      <ul>${p.detail.risks.map(t => `<li>${t}</li>`).join('')}</ul>
-    </div>
-    <div class="exp-block next">
-      <h3>Best Next Action</h3>
-      <p class="exp-next-text">${p.detail.next}</p>
-    </div>
+    ${profileNote}
   `;
 
   document.getElementById('section-explanation')
@@ -395,6 +413,133 @@ function renderTimeline() {
 
 function onGradeChange() {
   renderTimeline();
+}
+
+/* ── Analyze ───────────────────────────────────────────────────────── */
+function analyzePathways() {
+  const majors    = document.getElementById('p-majors').value.toLowerCase();
+  const countries = document.getElementById('p-countries').value.toLowerCase();
+  const budget    = document.getElementById('p-budget').value.toLowerCase();
+  const visa      = document.getElementById('p-visa').value.toLowerCase();
+  const risk      = document.getElementById('p-risk').value.toLowerCase();
+  const goal      = document.getElementById('p-goal').value.toLowerCase();
+
+  const isEmpty = !majors.trim() && !countries.trim() && !goal.trim();
+  adjustedScores = {};
+  analysisNotes  = {};
+
+  if (isEmpty) {
+    analysisRan = false;
+    setProfileStatus('Add more profile details for a more tailored comparison.');
+    renderTable();
+    if (selectedId) renderExplanation(selectedId);
+    return;
+  }
+
+  const ctokens   = countries.split(/[\s,\/\-\.]+/).filter(Boolean);
+  const inCountry = (term) => ctokens.some(t => t === term) || countries.includes(term);
+
+  const isCS           = /computer science|data science|\bcs\b|artificial intelligence|\bai\b|engineering|software/.test(majors);
+  const isBusiness     = /business|commerce|economics|finance|management|analytics/.test(majors);
+  const isOther        = !isCS && !isBusiness && /psychology|law|healthcare|design/.test(majors);
+
+  const isLowBudget    = /low|scholarship/.test(budget);
+  const isHighBudget   = /high/.test(budget);
+
+  const isHighVisa     = /high/.test(visa);
+
+  const isLowRisk      = /low/.test(risk);
+
+  const isEntrepreneur = /startup|company|founder|product|technology|\bai\b|entrepreneur|business/.test(goal);
+  const isProfessional = !isEntrepreneur && /law|healthcare|psychology|design|research/.test(goal);
+
+  PATHWAYS.forEach(pathway => {
+    const s     = { ...pathway.scores };
+    const notes = [];
+
+    // Country fit
+    if (pathway.id === 'canada' && inCountry('canada')) {
+      s.career = clamp(s.career + 1);
+      notes.push('Canada is in your target countries — career score boosted.');
+    }
+    if (pathway.id === 'us' && (inCountry('us') || inCountry('usa') || countries.includes('united states'))) {
+      s.career   = clamp(s.career + 1);
+      s.academic = clamp(s.academic + 1);
+      notes.push('US is in your target countries — career and academic scores boosted.');
+    }
+    if (pathway.id === 'uk' && (inCountry('uk') || countries.includes('united kingdom'))) {
+      s.career = clamp(s.career + 1);
+      notes.push('UK is in your target countries — career score boosted.');
+    }
+    if (pathway.id === 'australia' && inCountry('australia')) {
+      s.career = clamp(s.career + 1);
+      notes.push('Australia is in your target countries — career score boosted.');
+    }
+    if (pathway.id === 'japan' && inCountry('japan')) {
+      s.backup = clamp(s.backup + 1);
+      notes.push('Japan is in your target countries — backup score boosted.');
+    }
+
+    // Major fit
+    if (isCS) {
+      if (pathway.id === 'canada')    { s.academic = clamp(s.academic + 1); s.entrepreneur = clamp(s.entrepreneur + 1); notes.push('CS/Data Science major aligns with Canada co-op programs.'); }
+      if (pathway.id === 'us')        { s.academic = clamp(s.academic + 1); s.entrepreneur = clamp(s.entrepreneur + 1); notes.push('CS/AI major aligns with top US programs.'); }
+      if (pathway.id === 'australia') { s.academic = clamp(s.academic + 1); notes.push('CS major fits Australia double-degree programs.'); }
+    }
+    if (isBusiness) {
+      if (pathway.id === 'uk')        { s.academic = clamp(s.academic + 1); s.career = clamp(s.career + 1); notes.push('Business/Analytics major aligns with LSE and Warwick programs.'); }
+      if (pathway.id === 'australia') { s.career   = clamp(s.career + 1);   notes.push('Business major fits Australia CS/Commerce double degrees.'); }
+    }
+    if (isOther) {
+      notes.push('Your major may benefit from routes not yet covered in this MVP.');
+    }
+
+    // Budget
+    if (isLowBudget) {
+      if (pathway.id === 'us')     { s.cost = clamp(s.cost - 1); notes.push('Scholarship-aware budget reduces US cost fit.'); }
+      if (pathway.id === 'canada') { s.cost = clamp(s.cost + 1); notes.push('Canada is cost-favorable for scholarship-aware students.'); }
+      if (pathway.id === 'japan')  { s.cost = clamp(s.cost + 1); notes.push('Japan has low tuition — strong for cost-aware students.'); }
+    }
+    if (isHighBudget && pathway.id === 'us') {
+      notes.push('High budget keeps US route fully competitive.');
+    }
+
+    // Visa importance
+    if (isHighVisa) {
+      if (pathway.id === 'canada') { s.visa   = clamp(s.visa + 1);   notes.push('High visa importance: Canada PGWP pathway is strong.'); }
+      if (pathway.id === 'us')     { s.visa   = clamp(s.visa - 1);   notes.push('High visa importance: US H-1B uncertainty reduces visa fit.'); }
+      if (pathway.id === 'japan')  { s.backup = clamp(s.backup + 1); notes.push('High visa importance: Japan has zero immigration friction.'); }
+    }
+
+    // Risk tolerance
+    if (isLowRisk) {
+      if (pathway.id === 'us')     { s.backup = clamp(s.backup - 1); notes.push('Low risk tolerance: US route carries higher uncertainty.'); }
+      if (pathway.id === 'canada') { s.backup = clamp(s.backup + 1); }
+      if (pathway.id === 'japan')  { s.backup = clamp(s.backup + 1); }
+    }
+
+    // Future goal
+    if (isEntrepreneur) {
+      if (pathway.id === 'us')        { s.entrepreneur = clamp(s.entrepreneur + 1); s.career = clamp(s.career + 1); notes.push('Startup/founder goal boosts US entrepreneurship fit.'); }
+      if (pathway.id === 'canada')    { s.entrepreneur = clamp(s.entrepreneur + 1); }
+      if (pathway.id === 'australia') { s.entrepreneur = clamp(s.entrepreneur + 1); }
+    }
+    if (isProfessional) {
+      notes.push('Your goal may benefit from routes not yet in this MVP.');
+    }
+
+    adjustedScores[pathway.id] = s;
+    analysisNotes[pathway.id]  = notes.find(n => !n.startsWith('Your')) || notes[0] || '';
+  });
+
+  analysisRan = true;
+  setProfileStatus('Analysis updated based on your profile inputs.');
+  renderTable();
+  if (selectedId) renderExplanation(selectedId);
+}
+
+function setProfileStatus(msg) {
+  document.getElementById('profile-status').textContent = msg;
 }
 
 /* ── Decision Log ──────────────────────────────────────────────────── */
