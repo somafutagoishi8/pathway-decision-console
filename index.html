@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pathway Decision Console — University Pathway Planning for International Students</title>
+  <meta name="description" content="Compare university pathways across Canada, US, UK, Australia, and Japan by cost, visa, career fit, and more. A decision-prep tool for international high school students.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🎓%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Pathway Decision Console</h1>
+        <p class="subtitle">Compare university pathways by country, cost, visa, and career fit — a decision-prep tool for international high school students.</p>
+      </div>
+      <span class="demo-badge">Demo</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Row 1: Profile + Priorities -->
+    <div class="grid-2">
+
+      <!-- Student Profile -->
+      <section class="card" id="section-profile">
+        <h2>Student Profile</h2>
+        <p class="card-note">Edit any field — changes are reflected in the export.</p>
+        <div class="profile-fields">
+          <div class="field">
+            <label for="p-goal">Future Goal</label>
+            <textarea id="p-goal" rows="2">Build technology-driven businesses that solve real-world problems</textarea>
+          </div>
+          <div class="field">
+            <label for="p-majors">Interested Majors</label>
+            <input id="p-majors" type="text" value="Computer Science, Data Science, Business Analytics">
+          </div>
+          <div class="field">
+            <label for="p-countries">Target Countries</label>
+            <input id="p-countries" type="text" value="Canada, US, UK, Australia, Japan (backup)">
+          </div>
+          <div class="field">
+            <label for="p-grade">Current Grade</label>
+            <select id="p-grade" onchange="onGradeChange()">
+              <option value="10">Grade 10</option>
+              <option value="11" selected>Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="p-budget">Budget Range</label>
+              <select id="p-budget">
+                <option selected>Medium / Scholarship-aware</option>
+                <option>Low / Need full aid</option>
+                <option>High / Flexible</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="p-risk">Risk Tolerance</label>
+              <select id="p-risk">
+                <option>Low</option>
+                <option selected>Medium</option>
+                <option>High</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="p-visa">Visa Importance</label>
+              <select id="p-visa">
+                <option selected>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="p-family">Family / Language Context</label>
+              <input id="p-family" type="text" value="English research, Japanese family discussion">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Decision Priorities -->
+      <section class="card" id="section-priorities">
+        <h2>Decision Priorities</h2>
+        <p class="card-note">Each slider = <strong>how much you personally care</strong> about that factor (1 = not important, 10 = critical to you). The Overall score in the comparison table recalculates instantly as you drag. <strong>Future Flexibility</strong> = how well this pathway keeps options open if your goals change — career, graduate school, business, research, or returning to another country.</p>
+        <div id="priorities-list"></div>
+      </section>
+
+    </div>
+
+    <!-- Pathway Comparison Table -->
+    <section class="card" id="section-table">
+      <h2>Pathway Comparison</h2>
+      <p class="card-note">Click any row to open the full route analysis below. The <strong>Overall</strong> column is a weighted average calculated from your priority sliders — drag a slider to watch the table re-sort live.</p>
+      <div class="table-scroll">
+        <table id="pathway-table">
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Career Fit</th>
+              <th>Cost Fit</th>
+              <th>Visa Fit</th>
+              <th>Academic Fit</th>
+              <th>Future Flexibility</th>
+              <th>Backup</th>
+              <th>Risk</th>
+              <th>Overall ↕</th>
+            </tr>
+          </thead>
+          <tbody id="pathway-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Selected Route Explanation -->
+    <section class="card" id="section-explanation">
+      <div class="explanation-header">
+        <h2>Selected Route Analysis</h2>
+        <span id="selected-badge" class="route-badge hidden"></span>
+      </div>
+      <div id="explanation-body" class="explanation-empty">
+        <p>Click a row in the Pathway Comparison table to see the full analysis here.</p>
+      </div>
+    </section>
+
+    <!-- Timeline -->
+    <section class="card" id="section-timeline">
+      <h2>Application Timeline &amp; Test Strategy</h2>
+      <p class="card-note" id="timeline-intro"></p>
+      <div class="tl-legend">
+        <span class="tl-leg tl-leg-test">Language / SAT Test</span>
+        <span class="tl-leg tl-leg-exam">AP Exam</span>
+        <span class="tl-leg tl-leg-essay">Essay</span>
+        <span class="tl-leg tl-leg-scholarship">Scholarship</span>
+        <span class="tl-leg tl-leg-application">Application / Deadline</span>
+      </div>
+      <div id="timeline-body"></div>
+    </section>
+
+    <!-- Decision Log -->
+    <section class="card" id="section-log">
+      <h2>Decision Log</h2>
+      <p class="card-note">Record your current thinking so it does not get lost between research sessions. <strong>This tool prepares better questions for your counselor — it does not replace professional advice.</strong> Save locally, then bring this summary to your next meeting.</p>
+      <div class="log-fields">
+        <div class="field">
+          <label for="l-decision">Current Decision</label>
+          <input id="l-decision" type="text" placeholder="e.g. Apply to Canada CS programs as primary route">
+        </div>
+        <div class="field">
+          <label for="l-reason">Reason</label>
+          <textarea id="l-reason" rows="2" placeholder="Why this decision makes sense right now..."></textarea>
+        </div>
+        <div class="field">
+          <label for="l-concerns">Concerns</label>
+          <textarea id="l-concerns" rows="2" placeholder="What worries you about this path..."></textarea>
+        </div>
+        <div class="field">
+          <label for="l-tradeoffs">Trade-offs Accepted</label>
+          <textarea id="l-tradeoffs" rows="2" placeholder="What you are giving up or consciously accepting..."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="l-sources">Sources Checked</label>
+            <input id="l-sources" type="text" placeholder="e.g. UBC website, Reddit, school counselor">
+          </div>
+          <div class="field">
+            <label for="l-next">Next Action</label>
+            <input id="l-next" type="text" placeholder="e.g. Book TOEFL for September">
+          </div>
+        </div>
+      </div>
+      <div class="log-actions">
+        <button class="btn btn-primary" onclick="saveDecision()">Save Decision</button>
+        <button class="btn btn-secondary" onclick="loadDecision()">Load Saved</button>
+        <button class="btn btn-outline" onclick="exportSummary()">Export Summary</button>
+      </div>
+      <div id="log-status" class="log-status"></div>
+    </section>
+
+    <!-- Friend Feedback -->
+    <section class="card" id="section-feedback">
+      <h2>Friend Feedback</h2>
+      <p class="card-note"><strong>This is prototype feedback — not a real application form.</strong> Your answers help sharpen what this tool explains and how it guides decisions. Fill this out after trying the demo, then export and share it.</p>
+      <div class="log-fields">
+        <div class="field">
+          <label for="fb-useful">1. What felt useful?</label>
+          <textarea id="fb-useful" rows="2" placeholder="What did you find helpful or interesting..."></textarea>
+        </div>
+        <div class="field">
+          <label for="fb-confusing">2. What felt confusing?</label>
+          <textarea id="fb-confusing" rows="2" placeholder="Any part that was unclear or hard to follow..."></textarea>
+        </div>
+        <div class="field">
+          <label for="fb-struggle">3. What decision are you currently struggling with?</label>
+          <textarea id="fb-struggle" rows="2" placeholder="e.g. Choosing between two countries, picking a major..."></textarea>
+        </div>
+        <div class="field">
+          <label for="fb-explain">4. What information would you want this app to explain better?</label>
+          <textarea id="fb-explain" rows="2" placeholder="e.g. Visa rules, scholarship process, test score targets..."></textarea>
+        </div>
+        <div class="field">
+          <label for="fb-counselor">5. Would you use this before or after meeting a counselor? Why?</label>
+          <textarea id="fb-counselor" rows="2" placeholder="Before, after, or both — and your reason..."></textarea>
+        </div>
+        <div class="field">
+          <label>6. Overall usefulness rating</label>
+          <div class="rating-row">
+            <span class="rating-end">1 — not useful</span>
+            <input type="range" id="fb-rating" min="1" max="10" value="7" oninput="updateRatingDisplay(this.value)">
+            <span class="rating-end">10 — very useful</span>
+            <span class="pri-val" id="fb-rating-val">7<span class="pri-val-denom">/10</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="log-actions">
+        <button class="btn btn-primary" onclick="saveFeedback()">Save Feedback</button>
+        <button class="btn btn-secondary" onclick="loadFeedback()">Load Saved</button>
+        <button class="btn btn-outline" onclick="exportFeedback()">Export Feedback</button>
+      </div>
+      <div id="fb-status" class="log-status"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    Pathway Decision Console &nbsp;·&nbsp; Local demo &nbsp;·&nbsp; No data is sent anywhere
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
